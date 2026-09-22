@@ -1485,7 +1485,7 @@ function sendMembershipDataToGoogleSheets() {
     }, 5000);
 }
 
-function downloadCard( {
+function downloadCard() {
     if (!finalCanvasBlob) return;
     const url = URL.createObjectURL(finalCanvasBlob);
     const a = document.createElement('a');
