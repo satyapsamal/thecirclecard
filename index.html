@@ -604,8 +604,8 @@
             <!-- Canvas rendered here -->
         </div>
         <div class="action-buttons">
-            <button class="btn btn-primary" onclick="downloadCard()">Download PNG</button>
-            <button class="btn" onclick="downloadCardPDF()">Download (PDF Print)</button>
+            <button class="btn btn-primary" onclick="downloadCardPDF()">Download (PDF Print)</button>
+            <button class="btn" onclick="downloadCard()">Download PNG</button>
             <button class="btn" onclick="shareCard()">Share</button>
             <button class="btn" onclick="editDetails()">Edit details</button>
         </div>
@@ -1040,7 +1040,7 @@ window.addEventListener('DOMContentLoaded', () => {
         document.body.classList.add('state-landing');
         document.getElementById('view-landing').classList.add('active');
         document.body.classList.add('scrollable');
-    }, 5000);
+    }, 3000);
 });
 
 function setupInputFormatters() {
@@ -1511,39 +1511,40 @@ function downloadCardPDF() {
         const pushText = (value) => pushBytes(encoder.encode(value));
         const beginObject = (number) => {
             offsets[number] = byteLength;
-            pushText(`${number} 0 obj\\n`);
+            pushText(`${number} 0 obj\n`);
         };
 
+        // PDF header. All subsequent structural newlines must be real LF bytes.
         pushBytes(new Uint8Array([37,80,68,70,45,49,46,51,10,37,255,255,255,255,10]));
 
         beginObject(1);
-        pushText('<< /Type /Catalog /Pages 2 0 R >>\\nendobj\\n');
+        pushText('<< /Type /Catalog /Pages 2 0 R >>\nendobj\n');
 
         beginObject(2);
-        pushText('<< /Type /Pages /Kids [3 0 R] /Count 1 >>\\nendobj\\n');
+        pushText('<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n');
 
         beginObject(3);
-        pushText(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${width} ${height}] /Resources << /XObject << /Im0 4 0 R >> >> /Contents 5 0 R >>\\nendobj\\n`);
+        pushText(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${width} ${height}] /Resources << /XObject << /Im0 4 0 R >> >> /Contents 5 0 R >>\nendobj\n`);
 
         beginObject(4);
-        pushText(`<< /Type /XObject /Subtype /Image /Width ${width} /Height ${height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${imageBytes.length} >>\\nstream\\n`);
+        pushText(`<< /Type /XObject /Subtype /Image /Width ${width} /Height ${height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${imageBytes.length} >>\nstream\n`);
         pushBytes(imageBytes);
-        pushText('\\nendstream\\nendobj\\n');
+        pushText('\nendstream\nendobj\n');
 
-        const content = `q\\n${width} 0 0 ${height} 0 0 cm\\n/Im0 Do\\nQ\\n`;
+        const content = `q\n${width} 0 0 ${height} 0 0 cm\n/Im0 Do\nQ\n`;
         const contentBytes = encoder.encode(content);
         beginObject(5);
-        pushText(`<< /Length ${contentBytes.length} >>\\nstream\\n`);
+        pushText(`<< /Length ${contentBytes.length} >>\nstream\n`);
         pushBytes(contentBytes);
-        pushText('endstream\\nendobj\\n');
+        pushText('endstream\nendobj\n');
 
         const xrefOffset = byteLength;
-        pushText('xref\\n0 6\\n');
-        pushText('0000000000 65535 f \\n');
+        pushText('xref\n0 6\n');
+        pushText('0000000000 65535 f \n');
         for (let i = 1; i <= 5; i++) {
-            pushText(String(offsets[i]).padStart(10, '0') + ' 00000 n \\n');
+            pushText(String(offsets[i]).padStart(10, '0') + ' 00000 n \n');
         }
-        pushText(`trailer\\n<< /Size 6 /Root 1 0 R >>\\nstartxref\\n${xrefOffset}\\n%%EOF\\n`);
+        pushText(`trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF\n`);
 
         const pdfBlob = new Blob(chunks, { type: 'application/pdf' });
         const url = URL.createObjectURL(pdfBlob);
